@@ -297,8 +297,6 @@ class Mining:
         ore (file): Filepath to a needle of the item icon of the ore
                     being mined, as it appears in the player's
                     inventory.
-        conf (float): Confidence required to match empty or full rock needles.
-                      Default is 0.85.
 
         drop_sapphire (bool): Whether to drop mined sapphires. Ignored if
                               banking is enabled. Default is True.
