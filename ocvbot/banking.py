@@ -43,7 +43,7 @@ def bank_settings_check(setting: str, value: str) -> None:
 
     """
     if setting == "quantity":
-        if value not in ("1", "5", "10", "all"):
+        if value not in ("1", "5", "10", "all", "x"):
             raise ValueError("Unsupported value for quantity setting!")
         setting_unset = f"./needles/bank/settings/{setting}/{value}-unset.png"
         setting_set = f"./needles/bank/settings/{setting}/{value}-set.png"

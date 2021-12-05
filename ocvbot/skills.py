@@ -135,6 +135,36 @@ class Cooking:
                 pass
         return True
 
+class Smelting:
+    def __init__(
+        self, item_in_menu: str, ore_type: str, smelter: str
+    ):
+        self.item_in_menu = item_in_menu
+        self.ore_type = ore_type
+        self.smelter = smelter
+
+    def click_smelter(self) -> bool:
+        """
+        Clicks the given forge.
+
+        Returns:
+            Returns True once the smithing menu appears.
+        """
+        log.info("Attempting to click smelter.")
+
+        # TODO: Refactor these two try/except blocks to use enable_button()
+        try:
+            vis.Vision(
+                region=vis.GAME_SCREEN,
+                needle=self.smelter,
+                loop_num=3,
+                loop_sleep_range=(500, 1000),
+                conf=0.85,
+            ).click_needle()
+        except start.NeedleError:
+            raise start.NeedleError("Unable to find smelter!", self.anvil)
+
+        return True
 
 class Magic:
     """

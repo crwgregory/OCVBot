@@ -267,6 +267,16 @@ def spellcaster(scenario: str, loops: int = 10000) -> None:
             misc.session_duration(human_readable=True)
             behavior.logout_break_range()
 
+def metallurgy(item: str, location: str, loops: int = 10000) -> None:
+    if location == "al-kharid":
+        bank_coords = [((91, 207), 3, (4, 7), (3, 9))]
+        smelter_coords = [((120, 122), 1, (5, 5), (8, 12))]
+        smelter_source = "./needles/game-screen/al-kharid-smelt/furnace.png"
+        # Assumes starting location is the bank.
+        banking.open_bank("west")
+    else:
+        raise ValueError("Unsupported value for location!")
+
 
 def chef(item: str, location: str, loops: int = 10000) -> None:
     """
