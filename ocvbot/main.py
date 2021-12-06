@@ -334,7 +334,7 @@ def metallurgy(bar_type: str, loops: int = 10000) -> None:
     smelter_source = "./needles/game-screen/al-kharid-smelt/furnace.png"
     map = './haystacks/al-kharid.png'
 
-    miner = skills.Smelting(
+    smelter = skills.Smelting(
         smelter_needle=smelter_source,
         bar_type=bar_type,
     )
@@ -343,12 +343,12 @@ def metallurgy(bar_type: str, loops: int = 10000) -> None:
     for _ in range(loops):
         # sense withdrawing ore is dependant on the type of smelting, I put it into the skill class 
         # lil' bit of an 'anti-pattern' from other scripts. Should I refactor?
-        miner.withdraw_ore() 
+        smelter.withdraw_ore() 
 
         misc.sleep_rand_roll(chance_range=(10, 20), sleep_range=(100, 10000))
         behavior.travel(smelter_coords, map)
         
-        miner.smelt()
+        smelter.smelt()
 
         misc.sleep_rand_roll(chance_range=(10, 20), sleep_range=(100, 10000))
         behavior.travel(bank_coords, map)
