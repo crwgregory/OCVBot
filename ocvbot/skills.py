@@ -270,7 +270,7 @@ class Mining:
                     inventory.
 
         mine_rock_loop (int): Number of times to attempt to mine a single rock before timing out
-        mine_rock_empty_needle_recheck (int): Number of times to attempt to look for an empty rock needs.
+        mine_rock_empty_needle_recheck (int): Number of times to attempt to look for an empty rock needle.
                                         Set to lower number for rocks with a high refresh rate like tin/copper.
         raise_on_rock_mine_timeout (bool): Whether or not to raise an exception when the miner timesout looking
                                            for the empty rock. Set to False for high refresh rocks like tin/copper.
@@ -401,7 +401,7 @@ class Mining:
                 return
             except start.NeedleError:
                 pass
-            
+
         if self.raise_on_rock_mine_timeout:
             raise start.TimeoutException("Timeout waiting for rock to be mined!")
 
