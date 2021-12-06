@@ -330,7 +330,7 @@ def spellcaster(scenario: str, loops: int = 10000) -> None:
 def metallurgy(bar_type: str, loops: int = 10000) -> None:
     
     bank_coords = [((88, 207), 3, (3, 3), (3, 9))]
-    smelter_coords = [((112, 122), 1, (2, 2), (8, 12))]
+    smelter_coords = [((112, 120), 1, (2, 2), (8, 12))]
     smelter_source = "./needles/game-screen/al-kharid-smelt/furnace.png"
     map = './haystacks/al-kharid.png'
 

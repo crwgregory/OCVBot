@@ -620,15 +620,34 @@ class Smelting:
     SMELT_BAR_IRON = "iron-bar"
 
     # SMELT_BAR_CONFIG contains configurations for bar types including 
-    # keybaord actions, and Inventory Needle
+    # keybaord actions, ore configs, and Inventory Needle
     SMELT_BAR_CONFIG = {
         SMELT_BAR_BRONZE: {
             "action": "space",
             "inv_needle": "./needles/items/copper-ore.png",
+            "ores": [
+                {
+                    "name": "tin",
+                    "withdraw_amount": "x",
+                    "required_amount": 14,
+                },
+                {
+                    "name": "copper",
+                    "withdraw_amount": "x",
+                    "required_amount": 14,
+                },
+            ],
         }, 
         SMELT_BAR_IRON: {
-            "action": "1",
+            "action": "2",
             "inv_needle": "./needles/items/iron-ore.png",
+            "ores": [
+                {
+                    "name": "iron",
+                    "withdraw_amount": "all",
+                    "required_amount": 28,
+                },
+            ],
         },
     }
 
@@ -639,35 +658,9 @@ class Smelting:
         
         self.smelter_needle = smelter_needle
         self.bar_type = bar_type
-        self.ore_needle = self.SMELT_BAR_CONFIG[bar_type]['inv_needle']
         self.action = self.SMELT_BAR_CONFIG[bar_type]['action']
-    
-    def get_withdraw_amount(self) -> str:
-        return self.SMELT_BAR_CONFIG[self.bar_type]['withdraw_amount']
-
-    def withdraw_ore(self):
-        if self.bar_type == self.SMELT_BAR_BRONZE:
-            banking.withdrawal_item(
-                item_bank='./needles/items/tin-ore-bank.png', 
-                item_inv='./needles/items/tin-ore.png', 
-                conf=0.99,
-                quantity='x',
-            )
-            banking.withdrawal_item(
-                item_bank='./needles/items/copper-ore-bank.png', 
-                item_inv='./needles/items/copper-ore.png', 
-                conf=0.99,
-                quantity='x',
-            )
-        elif self.bar_type == self.SMELT_BAR_IRON:
-            banking.withdrawal_item(
-                item_bank='./needles/items/iron-ore-bank.png', 
-                item_inv='./needles/items/iron-ore.png', 
-                conf=0.99,
-                quantity='all',
-            )
-        else:
-            raise Exception(f'Can not withdraw unsupported type {self.bar_type}')
+        self.bar_config = self.SMELT_BAR_CONFIG[bar_type]
+        log.info(f"Smelter Config: bar_type: '{self.bar_type}' Action: '{self.action}'")
 
     def smelt(self) -> bool:
         """
@@ -681,20 +674,46 @@ class Smelting:
 
         # Check that we have ore in inventory before attempting to smelt
         if not self._check_ore_in_inventory():
-            log.info(f'No ores in inventory for type {self.bar_type}. Needle: {self.ore_needle}.')
+            log.info(f'No ores in inventory for type {self.bar_type}.')
             # Return True sense we could have leveled up on the last bar
             return True
 
         # Click smelter and activate 'all' quantity
         self._new_smelt_session()
 
-        # Press smelter keyboard key
+        # Press keyboard to trigger smelter action
         inputs.Keyboard().keypress(key=self.action)
 
         # Wait for ore to be drained from Inventory
         self._wait_for_ore_to_drain()
 
         return True
+
+    def withdraw_ore(self):
+        for ore in self.bar_config['ores']:
+            log.info(f"Withdrawing {ore['name']}...")
+            n_inv = self._get_ore_needle(ore=ore)
+            n_bank = self._get_ore_needle(ore=ore, is_bank=True)
+            withdraw_amount = ore['withdraw_amount']
+            required_amount = ore['required_amount']
+
+            banking.withdrawal_item(
+                item_bank=n_bank, 
+                item_inv=n_inv, 
+                conf=0.99,
+                quantity=withdraw_amount,
+            )
+
+            log.debug("Validating the amount of ore in Inventory.")
+            ore_count = vis.Vision(
+                region=vis.INV,
+                needle=n_inv,
+                loop_num=2,
+                loop_sleep_range=(500, 1000),
+                conf=0.95,
+            ).count_needles()
+            if ore_count != required_amount:
+                raise Exception(f"Failed to validate amount of ores in Inventory. Expected {required_amount} but got {ore_count}")
 
     def _wait_for_ore_to_drain(self):
         """
@@ -713,26 +732,35 @@ class Smelting:
             wait = self._check_ore_in_inventory()
 
     def _check_ore_in_inventory(self) -> bool:
-        log.debug(f'Checking for {self.ore_needle} in Inventory.')
+        """
+        _check_ore_in_inventory
+        Blocks until all ore needles are not found in player Inventory
+        """
         try:
-            vis.Vision(
-                region=vis.INV,
-                needle=self.ore_needle,
-                loop_num=1,
-                loop_sleep_range=(500, 1000),
-                conf=0.95,
-            ).wait_for_needle()
-            log.debug(f'Found {self.ore_needle} in Inventory.')
-            return True
+            for ore in self.bar_config['ores']:
+                needle = self._get_ore_needle(ore=ore)
+                log.debug(f'Checking for {needle} in Inventory.')
+                vis.Vision(
+                    region=vis.INV,
+                    needle=needle,
+                    loop_num=1,
+                    loop_sleep_range=(500, 1000),
+                    conf=0.95,
+                ).wait_for_needle()
+                log.debug(f'Found {needle} in Inventory.')
         except start.NeedleError:
-            log.debug(f'Could not find {self.ore_needle} in Inventory')
+            log.debug(f'Could not find {needle} in Inventory')
             return False
+
+        return True
 
     def _new_smelt_session(self):
         """
         Sets the game state with a new smelter session waiting for a key
         press for bar type.
         """
+
+        log.info("Starting new smelt session")
 
         # Click Smelter
         vis.Vision(
@@ -764,6 +792,11 @@ class Smelting:
             conf=0.95,
         )
         return True
+
+    def _get_ore_needle(self, ore: dict, is_bank: bool = False) -> str:
+        if is_bank:
+            return f'./needles/items/{ore["name"]}-ore-bank.png'
+        return f'./needles/items/{ore["name"]}-ore.png'
     
     def _validate_bar_type(self, bar_type: str):
         """
