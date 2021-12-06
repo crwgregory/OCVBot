@@ -9,7 +9,9 @@
 #   command line, e.g. `osrs.sh "-Dhttp.proxyHost=10.0.0.1 -Dhttp.proxyPort=8008"`
 
 # The path to the Java executable you wish to use.
-readonly java_path="/usr/lib/jvm/java-11-openjdk-amd64/bin/java"
+# Override default by setting an env var OSRS_PATH_JAVA to your systems path
+#   or by supplying it in the command `OSRS_PATH_JAVA=/my/path ./tools/osrs.sh`
+readonly java_path="${OSRS_PATH_JAVA:-/usr/lib/jvm/java-11-openjdk/bin/java}"
 
 # These varaiables are unlikely to change.
 readonly server="http://oldschool.runescape.com/jav_config.ws"
