@@ -110,6 +110,61 @@ def miner(scenario: str, loops: int = 10000) -> None:
             ((240, 399), 1, (4, 4), (3, 8)),
         ]
 
+    elif scenario == "varrock-east-mine-tin":
+        haystack_map = "./haystacks/varrock-east-mine.png"
+        ore = "./needles/items/tin-ore.png"
+        mining = skills.Mining(
+            rocks=[
+                (prefix + "west-tin-full.png", prefix + "west-tin-empty.png"),
+                (prefix + "north-tin-full.png", prefix + "north-tin-empty.png"),
+            ],
+            ore=ore,
+            drop_sapphire=drop_sapphire_config,
+            drop_emerald=drop_emerald_config,
+            drop_ruby=drop_ruby_config,
+            drop_diamond=drop_diamond_config,
+            drop_clue_geode=drop_clue_geode_config,
+            # conf=0.95,
+        )
+        bank_from_mine = [
+            ((253, 181), 5, (35, 35), (1, 6)),
+            ((112, 150), 5, (20, 20), (1, 6)),
+            ((108, 194), 1, (10, 4), (3, 8)),
+        ]
+
+        mine_from_bank = [
+            ((240, 161), 5, (35, 35), (1, 6)),
+            ((262, 365), 5, (25, 25), (1, 6)),
+            ((224, 419), 1, (4, 4), (3, 8)),
+        ]
+
+    elif scenario == "varrock-east-mine-copper":
+        haystack_map = "./haystacks/varrock-east-mine.png"
+        ore = "./needles/items/copper-ore.png"
+        mining = skills.Mining(
+            rocks=[
+                (prefix + "south-copper-full.png", prefix + "south-copper-empty.png"),
+                (prefix + "east-copper-full.png", prefix + "east-copper-empty.png"),
+            ],
+            ore=ore,
+            drop_sapphire=drop_sapphire_config,
+            drop_emerald=drop_emerald_config,
+            drop_ruby=drop_ruby_config,
+            drop_diamond=drop_diamond_config,
+            drop_clue_geode=drop_clue_geode_config,
+        )
+        bank_from_mine = [
+            ((253, 181), 5, (35, 35), (1, 6)),
+            ((112, 158), 5, (20, 20), (1, 6)),
+            ((108, 194), 1, (10, 4), (3, 8)),
+        ]
+
+        mine_from_bank = [
+            ((240, 161), 5, (35, 35), (1, 6)),
+            ((262, 365), 5, (25, 25), (1, 6)),
+            ((237, 411), 1, (4, 4), (3, 8)),
+        ]
+
     elif scenario == "lumbridge-mine":
         drop_ore_config = True  # Banking not supported.
         ore = "./needles/items/copper-ore.png"
@@ -145,10 +200,13 @@ def miner(scenario: str, loops: int = 10000) -> None:
         raise ValueError("Scenario not supported!")
 
     # MAIN FUNCTION LOOP --------------------------------------------------------------------------
-
+    log.debug("entering loop")
     for _ in range(loops):
+        log.debug("in loop")
         try:
+            log.debug("try to mine multiple rocks")
             mining.mine_multiple_rocks()
+            log.debug("sleep rand roll mining")
             misc.sleep_rand_roll(chance_range=(200, 300))
         except start.TimeoutException:
             misc.sleep_rand_roll(chance_range=(50, 60))
@@ -179,7 +237,8 @@ def miner(scenario: str, loops: int = 10000) -> None:
 
             misc.session_duration(human_readable=True)
         # Logout when anything else unexpected occurs.
-        except (Exception, start.InefficientUseOfInventory):
+        except (Exception, start.InefficientUseOfInventory) as error:
+            log.info(error)
             behavior.logout()
 
 

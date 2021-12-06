@@ -401,7 +401,7 @@ class Mining:
         # Check for both at the same time since some rocks (e.g. in Camdozaal Mine)
         #   provide multiple ore and may create a full inventory before the rock
         #   is empty.
-        for _ in range(20):
+        for _ in range(3):
 
             if self._is_inventory_full() is True:
                 raise start.InventoryFull("Inventory is full!")
@@ -409,7 +409,7 @@ class Mining:
             try:
                 vis.Vision(
                     region=vis.GAME_SCREEN,
-                    loop_num=3,
+                    loop_num=1,
                     conf=self.conf,
                     needle=rock_empty_needle,
                     loop_sleep_range=(100, 600),
@@ -418,7 +418,7 @@ class Mining:
                 return
             except start.NeedleError:
                 pass
-        raise start.TimeoutException("Timeout waiting for rock to be mined!")
+        # raise start.TimeoutException("Timeout waiting for rock to be mined!")
 
     def mine_multiple_rocks(self) -> None:
         """
@@ -441,6 +441,7 @@ class Mining:
             #   and "empty" versions of each ore.
             (rock_full_needle, rock_empty_needle) = rocks
             try:
+                log.debug(rock_full_needle)
                 self._mine_rock(rock_full_needle, rock_empty_needle)
             except start.RockEmpty:
                 pass
