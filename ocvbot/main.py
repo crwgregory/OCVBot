@@ -207,9 +207,7 @@ def miner(scenario: str, loops: int = 10000) -> None:
     # MAIN FUNCTION LOOP --------------------------------------------------------------------------
     for _ in range(loops):
         try:
-            log.debug("try to mine multiple rocks")
             mining.mine_multiple_rocks()
-            log.debug("sleep rand roll mining")
             misc.sleep_rand_roll(chance_range=(200, 300))
         except start.TimeoutException:
             misc.sleep_rand_roll(chance_range=(50, 60))
@@ -241,7 +239,7 @@ def miner(scenario: str, loops: int = 10000) -> None:
             misc.session_duration(human_readable=True)
         # Logout when anything else unexpected occurs.
         except (Exception, start.InefficientUseOfInventory) as error:
-            log.info(error)
+            log.error(error)
             behavior.logout()
 
 
