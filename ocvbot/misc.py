@@ -44,7 +44,7 @@ def sleep_rand(sleep_min: int = 0, sleep_max: int = 100) -> bool:
 
     """
     sleeptime = rand_seconds(min_seconds=sleep_min, max_seconds=sleep_max)
-    # log.debug('Sleeping for %s seconds.', sleeptime)
+    log.debug('Sleeping for %s seconds.', sleeptime)
     time.sleep(sleeptime)
     return True
 

@@ -39,6 +39,8 @@ from ocvbot import banking
 from ocvbot import behavior
 from ocvbot import misc
 from ocvbot import skills
+from ocvbot import inputs
+from ocvbot import interface
 from ocvbot import startup as start
 from ocvbot import vision as vis
 
@@ -326,15 +328,42 @@ def spellcaster(scenario: str, loops: int = 10000) -> None:
             misc.session_duration(human_readable=True)
             behavior.logout_break_range()
 
-def metallurgy(item: str, location: str, loops: int = 10000) -> None:
-    if location == "al-kharid":
-        bank_coords = [((91, 207), 3, (4, 7), (3, 9))]
-        smelter_coords = [((120, 122), 1, (5, 5), (8, 12))]
-        smelter_source = "./needles/game-screen/al-kharid-smelt/furnace.png"
-        # Assumes starting location is the bank.
+def metallurgy(bar_type: str, loops: int = 10000) -> None:
+    
+    bank_coords = [((91, 207), 3, (4, 7), (3, 9))]
+    smelter_coords = [((112, 122), 1, (2, 2), (8, 12))]
+    smelter_source = "./needles/game-screen/al-kharid-smelt/furnace.png"
+    map = './haystacks/al-kharid.png'
+    banking.open_bank("west")
+    for _ in range(loops):
+        banking.withdrawal_item(
+            item_bank='./needles/items/tin-ore-bank.png', 
+            item_inv='./needles/items/tin-ore.png', 
+            conf=0.99,
+            quantity='x',
+        )
+        banking.withdrawal_item(
+            item_bank='./needles/items/copper-ore-bank.png', 
+            item_inv='./needles/items/copper-ore.png', 
+            conf=0.99,
+            quantity='x',
+        )
+
+        misc.sleep_rand_roll(chance_range=(10, 20), sleep_range=(100, 10000))
+        behavior.travel(smelter_coords, map)
+        
+        skills.Smelting(
+            smelter_needle=smelter_source,
+            bar_type=bar_type,
+        ).smelt()
+
+        misc.sleep_rand_roll(chance_range=(10, 20), sleep_range=(100, 10000))
+        behavior.travel(bank_coords, map)
         banking.open_bank("west")
-    else:
-        raise ValueError("Unsupported value for location!")
+        banking.deposit_inventory()
+
+        behavior.logout_break_range()
+        misc.session_duration(human_readable=True)
 
 
 def chef(item: str, location: str, loops: int = 10000) -> None:
@@ -528,6 +557,11 @@ def main():
             bar=start.config[script]["bar"],
             item=start.config[script]["item"],
             location=start.config[script]["location"],
+        )
+
+    elif script == "metallurgy":
+        metallurgy(
+            bar_type=start.config[script]["bar"],
         )
 
     elif script == "test":

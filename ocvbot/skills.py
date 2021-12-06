@@ -10,6 +10,7 @@ from ocvbot import inputs
 from ocvbot import misc
 from ocvbot import startup as start
 from ocvbot import vision as vis
+from ocvbot import interface
 
 
 def wait_for_level_up(wait_time: int):
@@ -133,37 +134,6 @@ class Cooking:
                 break
             except start.NeedleError:
                 pass
-        return True
-
-class Smelting:
-    def __init__(
-        self, item_in_menu: str, ore_type: str, smelter: str
-    ):
-        self.item_in_menu = item_in_menu
-        self.ore_type = ore_type
-        self.smelter = smelter
-
-    def click_smelter(self) -> bool:
-        """
-        Clicks the given forge.
-
-        Returns:
-            Returns True once the smithing menu appears.
-        """
-        log.info("Attempting to click smelter.")
-
-        # TODO: Refactor these two try/except blocks to use enable_button()
-        try:
-            vis.Vision(
-                region=vis.GAME_SCREEN,
-                needle=self.smelter,
-                loop_num=3,
-                loop_sleep_range=(500, 1000),
-                conf=0.85,
-            ).click_needle()
-        except start.NeedleError:
-            raise start.NeedleError("Unable to find smelter!", self.anvil)
-
         return True
 
 class Magic:
@@ -617,3 +587,140 @@ class Smithing:
                 self.smith_items()
 
         return False
+
+
+class Smelting:
+    """
+    Class for all activities related to Smelting Bars.
+    I would have put this in the Smithing class but that class has already been tailored heavily to smithing
+    with a hamer and anvil
+    Args:
+        bar_type (SMELT_BAR_*): Type of bar to smelt
+
+    TODO: Handle non-symetrical amounts of tin/copper withdrawn from bank
+    TODO: Handle more advance forms of smelting w/ differnts amounts of coal and subsequent inventory checks
+    """
+
+    SMELT_BAR_BRONZE = "bronze-bar"
+    SMELT_BAR_IRON = "iron-bar"
+
+    # SMELT_BAR_ACTIONS is a dictonary of bar type (SMELT_BAR_*) to key press
+    SMELT_BAR_ACTIONS = {
+        SMELT_BAR_BRONZE: "space", 
+        SMELT_BAR_IRON: "1",
+    }
+
+    # SMELT_BAR_ORES is a dictonary of needles to search for in the player Inventory while waiting for ores to drain.
+    SMELT_BAR_ORES = {
+        SMELT_BAR_BRONZE: './needles/items/copper-ore.png', 
+        SMELT_BAR_IRON: './needles/items/iron-ore.png',
+    }
+
+    def __init__(
+        self, smelter_needle: str, bar_type: str
+    ):
+        if bar_type not in self.SMELT_BAR_ACTIONS:
+            raise Exception(f'Bar type {bar_type} is not supported! Supported Types: {self.SMELT_BAR_ACTIONS.keys()}')
+        
+        self.smelter_needle = smelter_needle
+        self.bar_type = bar_type
+        self.ore_needle = self.SMELT_BAR_ORES[bar_type]
+
+    def smelt(self) -> bool:
+        """
+        Smelt 
+          - Creates a new smelt session using smelter_needle
+          - Waits until ore is drained from inventory
+
+        Returns:
+            True when all ore is drained from inventory
+        Raise:
+            Raises Exception if bar_type is not supported          
+        """
+
+        # Check that we have ore in inventory before attempting to smelt
+        if not self._check_ore_in_inventory():
+            log.info(f'No ores in inventory for type {self.bar_type}. Needle: {self.ore_needle}.')
+            # Return True sense we could have leveled up on the last bar
+            return True
+
+        # Click smelter and activate 'all' quantity
+        self._new_smelt_session()
+
+        # Press bar keyboard key
+        inputs.Keyboard().keypress(key=self.SMELT_BAR_ACTIONS[self.bar_type])
+
+        # Wait for ore to be drained from Inventory
+        self._wait_for_ore_to_drain()
+
+        return True
+
+    def _wait_for_ore_to_drain(self):
+        """
+        _wait_for_ore_to_drain 
+        Waits for the ore needle to no longer be found in the inventory.
+        """
+        wait = True
+        while wait:
+            level_up = wait_for_level_up(1)
+            # If the player levels-up while selting, restart smelting.
+            if level_up is True:
+                return self.smelt()
+            
+            # Wait for the ores to be drained from the players Inventory
+            wait = self._check_ore_in_inventory()
+
+    def _check_ore_in_inventory(self) -> bool:
+        log.debug(f'Checking for ore needle {self.ore_needle}')
+        log.info(f'Checking for {self.bar_type} in Inventory.')
+        try:
+            vis.Vision(
+                region=vis.INV,
+                needle=self.ore_needle,
+                loop_num=1,
+                loop_sleep_range=(500, 1000),
+                conf=0.95,
+            ).wait_for_needle()
+            log.info(f'Found {self.bar_type} in Inventory.')
+            return True
+        except start.NeedleError:
+            log.debug(f'Could not find ore needle {self.ore_needle}')
+            log.info(f'Could not find {self.bar_type} in Inventory')
+            return False
+
+    def _new_smelt_session(self):
+        """
+        Sets the game state with a new smelter session waiting for a key
+        press for bar type.
+        """
+
+        # Click Smelter
+        vis.Vision(
+            region=vis.GAME_SCREEN,
+            needle=self.smelter_needle,
+            loop_num=3,
+            loop_sleep_range=(500, 1000),
+            conf=0.85,
+        ).click_needle()
+
+        # Wait for bar selection screen to appear
+        try:
+            vis.Vision(
+                region=vis.CHAT_MENU,
+                needle="./needles/game-screen/smelter/rune-bar.png",
+                loop_num=5,
+            ).wait_for_needle()
+        except (start.NeedleError) as err:
+            log.error("Could not confirm that the Smelting Screen is open.")
+            raise err
+
+        # Make sure the "all" selection is active
+        interface.enable_button(
+            button_disabled='./needles/game-screen/smelter/all-unset.png',
+            button_disabled_region=vis.CHAT_MENU,
+            button_enabled='./needles/game-screen/smelter/all-set.png',
+            button_enabled_region=vis.CHAT_MENU,
+            loop_num=10,
+            conf=0.95,
+        )
+        return True
