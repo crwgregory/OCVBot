@@ -124,7 +124,9 @@ def miner(scenario: str, loops: int = 10000) -> None:
             drop_ruby=drop_ruby_config,
             drop_diamond=drop_diamond_config,
             drop_clue_geode=drop_clue_geode_config,
-            # conf=0.95,
+            mine_rock_empty_needle_recheck=1,
+            mine_rock_loop=3,
+            raise_on_rock_mine_timeout=False,
         )
         bank_from_mine = [
             ((253, 181), 5, (35, 35), (1, 6)),
@@ -152,6 +154,9 @@ def miner(scenario: str, loops: int = 10000) -> None:
             drop_ruby=drop_ruby_config,
             drop_diamond=drop_diamond_config,
             drop_clue_geode=drop_clue_geode_config,
+            mine_rock_empty_needle_recheck=1,
+            mine_rock_loop=3,
+            raise_on_rock_mine_timeout=False,
         )
         bank_from_mine = [
             ((253, 181), 5, (35, 35), (1, 6)),
@@ -200,9 +205,7 @@ def miner(scenario: str, loops: int = 10000) -> None:
         raise ValueError("Scenario not supported!")
 
     # MAIN FUNCTION LOOP --------------------------------------------------------------------------
-    log.debug("entering loop")
     for _ in range(loops):
-        log.debug("in loop")
         try:
             log.debug("try to mine multiple rocks")
             mining.mine_multiple_rocks()

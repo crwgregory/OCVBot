@@ -269,6 +269,12 @@ class Mining:
                     being mined, as it appears in the player's
                     inventory.
 
+        mine_rock_loop (int): Number of times to attempt to mine a single rock before timing out
+        mine_rock_empty_needle_recheck (int): Number of times to attempt to look for an empty rock needs.
+                                        Set to lower number for rocks with a high refresh rate like tin/copper.
+        raise_on_rock_mine_timeout (bool): Whether or not to raise an exception when the miner timesout looking
+                                           for the empty rock. Set to False for high refresh rocks like tin/copper.
+
         drop_sapphire (bool): Whether to drop mined sapphires. Ignored if
                               banking is enabled. Default is True.
         drop_emerald (bool): Whether to drop mined emeralds. Ignored if
@@ -307,6 +313,9 @@ class Mining:
         drop_diamond: bool = False,
         drop_clue_geode: bool = True,
         conf: float = 0.85,
+        mine_rock_loop: int = 20,
+        mine_rock_empty_needle_recheck: int = 3,
+        raise_on_rock_mine_timeout: bool = True,
     ):
         self.rocks = rocks
         self.ore = ore
@@ -316,6 +325,9 @@ class Mining:
         self.drop_diamond = drop_diamond
         self.drop_clue_geode = drop_clue_geode
         self.conf = conf
+        self.mine_rock_loop = mine_rock_loop
+        self.mine_rock_empty_needle_recheck = mine_rock_empty_needle_recheck
+        self.raise_on_rock_mine_timeout = raise_on_rock_mine_timeout
 
     def _is_inventory_full(self) -> bool:
         """
@@ -372,7 +384,7 @@ class Mining:
         # Check for both at the same time since some rocks (e.g. in Camdozaal Mine)
         #   provide multiple ore and may create a full inventory before the rock
         #   is empty.
-        for _ in range(3):
+        for _ in range(self.mine_rock_loop):
 
             if self._is_inventory_full() is True:
                 raise start.InventoryFull("Inventory is full!")
@@ -380,7 +392,7 @@ class Mining:
             try:
                 vis.Vision(
                     region=vis.GAME_SCREEN,
-                    loop_num=1,
+                    loop_num=self.mine_rock_empty_needle_recheck,
                     conf=self.conf,
                     needle=rock_empty_needle,
                     loop_sleep_range=(100, 600),
@@ -389,7 +401,9 @@ class Mining:
                 return
             except start.NeedleError:
                 pass
-        # raise start.TimeoutException("Timeout waiting for rock to be mined!")
+            
+        if self.raise_on_rock_mine_timeout:
+            raise start.TimeoutException("Timeout waiting for rock to be mined!")
 
     def mine_multiple_rocks(self) -> None:
         """
