@@ -641,10 +641,6 @@ class Smelting:
         self.bar_type = bar_type
         self.ore_needle = self.SMELT_BAR_CONFIG[bar_type]['inv_needle']
         self.action = self.SMELT_BAR_CONFIG[bar_type]['action']
-
-    def _validate_bar_type(self, bar_type: str):
-        if bar_type not in self.SMELT_BAR_CONFIG:
-            raise Exception(f'Bar type {bar_type} is not supported! Supported Types: {self.SMELT_BAR_CONFIG.keys()}')
     
     def get_withdraw_amount(self) -> str:
         return self.SMELT_BAR_CONFIG[self.bar_type]['withdraw_amount']
@@ -680,9 +676,7 @@ class Smelting:
           - Waits until ore is drained from inventory
 
         Returns:
-            True when all ore is drained from inventory
-        Raise:
-            Raises Exception if bar_type is not supported          
+            True when all ore is drained from inventory    
         """
 
         # Check that we have ore in inventory before attempting to smelt
@@ -770,3 +764,12 @@ class Smelting:
             conf=0.95,
         )
         return True
+    
+    def _validate_bar_type(self, bar_type: str):
+        """
+        Validate that the requested bar type is supported
+        Raise:
+            Raises Exception if bar_type is not supported      
+        """
+        if bar_type not in self.SMELT_BAR_CONFIG:
+            raise Exception(f'Bar type {bar_type} is not supported! Supported Types: {self.SMELT_BAR_CONFIG.keys()}')
