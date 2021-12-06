@@ -39,8 +39,6 @@ from ocvbot import banking
 from ocvbot import behavior
 from ocvbot import misc
 from ocvbot import skills
-from ocvbot import inputs
-from ocvbot import interface
 from ocvbot import startup as start
 from ocvbot import vision as vis
 
