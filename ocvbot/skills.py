@@ -701,6 +701,7 @@ class Smelting:
         _wait_for_ore_to_drain 
         Waits for the ore needle to no longer be found in the inventory.
         """
+        log.info('Waiting for ores to be drained from Inventory.')
         wait = True
         while wait:
             level_up = wait_for_level_up(1)
@@ -709,7 +710,6 @@ class Smelting:
                 return self.smelt()
             
             # Wait for the ores to be drained from the players Inventory
-            log.info('Waiting for ores to be drained from Inventory.')
             wait = self._check_ore_in_inventory()
 
     def _check_ore_in_inventory(self) -> bool:

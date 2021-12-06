@@ -8,5 +8,7 @@ Supported bar types:
 - iron
 
 Requirments
-- For Bronze Smelting: You MUST have 'X' selected for the 'amount' tab in the bank screen. The amount MUST be set to 14.
+- Invintory tab MUST be open.
+- Invintory MUST be empty.
+- For Bronze Smelting: The amount of 'X' in the banking screen MUST be set to 14.
 - Ores MUST be visable when opening the bank (no scrolling to see ores).
