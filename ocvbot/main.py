@@ -330,32 +330,26 @@ def spellcaster(scenario: str, loops: int = 10000) -> None:
 
 def metallurgy(bar_type: str, loops: int = 10000) -> None:
     
-    bank_coords = [((91, 207), 3, (4, 7), (3, 9))]
+    bank_coords = [((88, 207), 3, (3, 3), (3, 9))]
     smelter_coords = [((112, 122), 1, (2, 2), (8, 12))]
     smelter_source = "./needles/game-screen/al-kharid-smelt/furnace.png"
     map = './haystacks/al-kharid.png'
+
+    miner = skills.Smelting(
+        smelter_needle=smelter_source,
+        bar_type=bar_type,
+    )
+
     banking.open_bank("west")
     for _ in range(loops):
-        banking.withdrawal_item(
-            item_bank='./needles/items/tin-ore-bank.png', 
-            item_inv='./needles/items/tin-ore.png', 
-            conf=0.99,
-            quantity='x',
-        )
-        banking.withdrawal_item(
-            item_bank='./needles/items/copper-ore-bank.png', 
-            item_inv='./needles/items/copper-ore.png', 
-            conf=0.99,
-            quantity='x',
-        )
+        # sense withdrawing ore is dependant on the type of smelting, I put it into the skill class 
+        # lil' bit of an 'anti-pattern' from other scripts. Should I refactor?
+        miner.withdraw_ore() 
 
         misc.sleep_rand_roll(chance_range=(10, 20), sleep_range=(100, 10000))
         behavior.travel(smelter_coords, map)
         
-        skills.Smelting(
-            smelter_needle=smelter_source,
-            bar_type=bar_type,
-        ).smelt()
+        miner.smelt()
 
         misc.sleep_rand_roll(chance_range=(10, 20), sleep_range=(100, 10000))
         behavior.travel(bank_coords, map)

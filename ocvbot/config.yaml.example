@@ -83,6 +83,10 @@ mining:
   #   `lumbridge-mine`
   #      See `docs/scenarios/mining-copper-lumbridge-swamp`
   #   `varrock-east-mine`
+  #      See `docs/scenarios/mining-iron-varrock-east`
+  #   `varrock-east-mine-tin`
+  #      See `docs/scenarios/mining-tin-varrock-east`
+  #   `varrock-east-mine-copper`
   #      See `docs/scenarios/mining-copper-varrock-east`
   location: varrock-east-mine
 

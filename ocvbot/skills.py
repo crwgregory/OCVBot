@@ -11,6 +11,7 @@ from ocvbot import misc
 from ocvbot import startup as start
 from ocvbot import vision as vis
 from ocvbot import interface
+from ocvbot import banking
 
 
 def wait_for_level_up(wait_time: int):
@@ -597,34 +598,66 @@ class Smelting:
     Args:
         bar_type (SMELT_BAR_*): Type of bar to smelt
 
-    TODO: Handle non-symetrical amounts of tin/copper withdrawn from bank
+    TODO: Handle aysymetrical amounts of tin/copper withdrawn from bank (when amount of ore is low)
     TODO: Handle more advance forms of smelting w/ differnts amounts of coal and subsequent inventory checks
     """
 
     SMELT_BAR_BRONZE = "bronze-bar"
     SMELT_BAR_IRON = "iron-bar"
 
-    # SMELT_BAR_ACTIONS is a dictonary of bar type (SMELT_BAR_*) to key press
-    SMELT_BAR_ACTIONS = {
-        SMELT_BAR_BRONZE: "space", 
-        SMELT_BAR_IRON: "1",
-    }
-
-    # SMELT_BAR_ORES is a dictonary of needles to search for in the player Inventory while waiting for ores to drain.
-    SMELT_BAR_ORES = {
-        SMELT_BAR_BRONZE: './needles/items/copper-ore.png', 
-        SMELT_BAR_IRON: './needles/items/iron-ore.png',
+    # SMELT_BAR_CONFIG contains configurations for bar types including 
+    # keybaord actions, and Inventory Needle
+    SMELT_BAR_CONFIG = {
+        SMELT_BAR_BRONZE: {
+            "action": "space",
+            "inv_needle": "./needles/items/copper-ore.png",
+        }, 
+        SMELT_BAR_IRON: {
+            "action": "1",
+            "inv_needle": "./needles/items/iron-ore.png",
+        },
     }
 
     def __init__(
         self, smelter_needle: str, bar_type: str
     ):
-        if bar_type not in self.SMELT_BAR_ACTIONS:
-            raise Exception(f'Bar type {bar_type} is not supported! Supported Types: {self.SMELT_BAR_ACTIONS.keys()}')
+        self._validate_bar_type(bar_type=bar_type)
         
         self.smelter_needle = smelter_needle
         self.bar_type = bar_type
-        self.ore_needle = self.SMELT_BAR_ORES[bar_type]
+        self.ore_needle = self.SMELT_BAR_CONFIG[bar_type]['inv_needle']
+        self.action = self.SMELT_BAR_CONFIG[bar_type]['action']
+
+    def _validate_bar_type(self, bar_type: str):
+        if bar_type not in self.SMELT_BAR_CONFIG:
+            raise Exception(f'Bar type {bar_type} is not supported! Supported Types: {self.SMELT_BAR_CONFIG.keys()}')
+    
+    def get_withdraw_amount(self) -> str:
+        return self.SMELT_BAR_CONFIG[self.bar_type]['withdraw_amount']
+
+    def withdraw_ore(self):
+        if self.bar_type == self.SMELT_BAR_BRONZE:
+            banking.withdrawal_item(
+                item_bank='./needles/items/tin-ore-bank.png', 
+                item_inv='./needles/items/tin-ore.png', 
+                conf=0.99,
+                quantity='x',
+            )
+            banking.withdrawal_item(
+                item_bank='./needles/items/copper-ore-bank.png', 
+                item_inv='./needles/items/copper-ore.png', 
+                conf=0.99,
+                quantity='x',
+            )
+        elif self.bar_type == self.SMELT_BAR_IRON:
+            banking.withdrawal_item(
+                item_bank='./needles/items/iron-ore-bank.png', 
+                item_inv='./needles/items/iron-ore.png', 
+                conf=0.99,
+                quantity='all',
+            )
+        else:
+            raise Exception(f'Can not withdraw unsupported type {self.bar_type}')
 
     def smelt(self) -> bool:
         """
@@ -647,8 +680,8 @@ class Smelting:
         # Click smelter and activate 'all' quantity
         self._new_smelt_session()
 
-        # Press bar keyboard key
-        inputs.Keyboard().keypress(key=self.SMELT_BAR_ACTIONS[self.bar_type])
+        # Press smelter keyboard key
+        inputs.Keyboard().keypress(key=self.action)
 
         # Wait for ore to be drained from Inventory
         self._wait_for_ore_to_drain()
@@ -668,11 +701,11 @@ class Smelting:
                 return self.smelt()
             
             # Wait for the ores to be drained from the players Inventory
+            log.info('Waiting for ores to be drained from Inventory.')
             wait = self._check_ore_in_inventory()
 
     def _check_ore_in_inventory(self) -> bool:
-        log.debug(f'Checking for ore needle {self.ore_needle}')
-        log.info(f'Checking for {self.bar_type} in Inventory.')
+        log.debug(f'Checking for {self.ore_needle} in Inventory.')
         try:
             vis.Vision(
                 region=vis.INV,
@@ -681,11 +714,10 @@ class Smelting:
                 loop_sleep_range=(500, 1000),
                 conf=0.95,
             ).wait_for_needle()
-            log.info(f'Found {self.bar_type} in Inventory.')
+            log.debug(f'Found {self.ore_needle} in Inventory.')
             return True
         except start.NeedleError:
-            log.debug(f'Could not find ore needle {self.ore_needle}')
-            log.info(f'Could not find {self.bar_type} in Inventory')
+            log.debug(f'Could not find {self.ore_needle} in Inventory')
             return False
 
     def _new_smelt_session(self):
