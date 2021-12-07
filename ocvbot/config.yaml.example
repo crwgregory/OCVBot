@@ -19,7 +19,7 @@ main:
   #   `mining`
   #   `cooking`
   #   `smithing`
-  #   `metallurgy`
+  #   `smelting`
   script: magic
 
   # Path to your user credential files. This can be a relative
@@ -151,8 +151,8 @@ smithing:
   #      See `docs/scenarios/smithing-varrock`.
   location: varrock
 
-# METALLURGY -----------------------------------------------------------------------------
-metallurgy:
+# SMELTING -------------------------------------------------------------------------------
+smelting:
   # Available options:
   #   `bronze-bar`
   #   `iron-bar`

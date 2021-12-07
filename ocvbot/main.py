@@ -327,7 +327,7 @@ def spellcaster(scenario: str, loops: int = 10000) -> None:
             misc.session_duration(human_readable=True)
             behavior.logout_break_range()
 
-def metallurgy(bar_type: str, loops: int = 10000) -> None:
+def smelting(bar_type: str, loops: int = 10000) -> None:
     
     bank_coords = [((88, 207), 3, (3, 3), (3, 9))]
     smelter_coords = [((112, 120), 1, (2, 2), (8, 12))]
@@ -552,8 +552,8 @@ def main():
             location=start.config[script]["location"],
         )
 
-    elif script == "metallurgy":
-        metallurgy(
+    elif script == "smelting":
+        smelting(
             bar_type=start.config[script]["bar"],
         )
 
